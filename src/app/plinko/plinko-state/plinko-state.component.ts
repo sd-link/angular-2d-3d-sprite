@@ -22,9 +22,6 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   canvasWidth: number;
   canvasHeight: number;
 
-  
-  
-
   timer: any[];
 
   ghostElement: any;
@@ -37,6 +34,12 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   stage: any;
 
   dice: any[];
+
+  status: any;
+  animationStep: number;
+
+  Valpha: number;
+  Vbeta: number;
 
   constructor(public plinkoService: PlinkoService) {
     this.addGhostFontElement();
@@ -64,7 +67,7 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-    
+    this.animationStep = 0;
     this.canvasWidth = CanvasDimension.width;
     this.canvasHeight = CanvasDimension.height;
 
@@ -79,7 +82,6 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
     // this.camera.attachControl(this.canvas);
     const light1 = new BABYLON.HemisphericLight("hemiLight1", new BABYLON.Vector3(-1, 1, 0), this.scene);
     const light2 = new BABYLON.HemisphericLight("hemiLight2", new BABYLON.Vector3(1, -1, 0), this.scene);
-
     const envTex = new BABYLON.Texture('assets/plinko/models/white-pixel.png', this.scene);
     
     this.dice = [];
@@ -96,12 +98,6 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
       this.dice[2] = newMeshes;
       this.hideDice(2);
     });
-    
-
-    
- 
-
-
 
     // pixi.js rendering
     this.pixiRenderer = new PIXI.WebGLRenderer({
@@ -142,6 +138,7 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
           if (this.spritePramid) {
             this.spritePramid.stop();
             this.spritePramid.alpha = 0.0;
+            this.playDiceAnimation()
           }
         };
 
@@ -177,16 +174,30 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
     
     
     this.engine.runRenderLoop(() => {   
+      this.updateAll();
       this.pixiRenderer.reset();
       this.pixiRenderer.render(this.stage);
       
       this.scene.autoClear = false;
       this.scene.render();    	
       this.engine.wipeCaches(true);
-    
+      
 
       
     });
+  }
+
+
+  updateAll () {
+    if (this.animationStep === 1) {
+      if (this.camera.radius > CanvasDimension.cameraRadiusMin) {
+        this.camera.radius -= 0.1;
+      }
+      this.camera.alpha += this.Valpha / 15;
+      this.camera.beta += this.Vbeta / 25;
+      if (this.camera.beta < 0) this.Vbeta = 1;
+      if (this.camera.beta > Math.PI) this.Vbeta = -1;
+    }
   }
  
   hideDice(diceColor) {
@@ -203,12 +214,24 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
     this.hideDice(-1);
     this.dice[diceColor][1].visibility = 1;
     this.dice[diceColor][2].visibility = 1;
+    
   }
 
 
   playAnimation() {
     this.initializeTimer();
     this.spritePramid.gotoAndPlay(1);
+  }
+
+  playDiceAnimation () {
+    this.showDice(this.status.dColor);
+    this.camera.alpha  = Math.random() * Math.PI * 2;
+    this.camera.beta  = Math.random() * Math.PI * 2;
+    this.camera.radius = CanvasDimension.cameraRadiusMax;
+    this.animationStep = 1;
+    this.Valpha = 1;
+    this.Vbeta = 1;
+    console.log(this.camera)
   }
 
 
@@ -225,6 +248,10 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
 
   betPlaced(status) {
     console.log(status)
+    
+    this.status = status;
+    this.animationStep = 0;
+    this.hideDice(-1);
     this.spritePramid.alpha = 1.0;
     this.playAnimation();
   }
