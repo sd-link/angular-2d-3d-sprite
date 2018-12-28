@@ -8,18 +8,23 @@ export class PlinkoService {
 
  
   betPlaced: EventEmitter<any> = new EventEmitter<any>();
+  roundFinished: EventEmitter<any> = new EventEmitter<any>();
 
   constructor() { }
 
  
 
   placeBet(bet: any): void {
-      const { plinkoType } = bet;
-      const diceInfo = this.setDiceAndHole(plinkoType);
+    const { plinkoType } = bet;
+    const diceInfo = this.setDiceAndHole(plinkoType);
 
-      this.betPlaced.emit(diceInfo);
- 
+    this.betPlaced.emit(diceInfo);
   }
+
+  finishRound(result: any) {
+    this.roundFinished.emit(result);
+  }
+  
 
   setDiceAndHole(plinkoType: string): any {
     let dColor;

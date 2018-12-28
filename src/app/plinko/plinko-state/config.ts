@@ -2,8 +2,36 @@ export enum CanvasDimension {
   width = 300,
   height = 250,
   cameraRadiusMin = 3,
-  cameraRadiusMax = 5
+  cameraRadiusMax = 5,
+ 
 }
+
+export const HoleNumberList = [
+  { 
+    alpha: Math.PI,
+    beta: 0
+  },
+  { 
+    alpha: Math.PI,
+    beta: 0
+  },
+  { 
+    alpha: Math.PI,
+    beta: 0
+  },
+  { 
+    alpha: Math.PI,
+    beta: 0
+  },
+  { 
+    alpha: Math.PI,
+    beta: 0
+  },
+  { 
+    alpha: Math.PI,
+    beta: 0
+  }
+]
 
 export const FallingDices = 4;
 

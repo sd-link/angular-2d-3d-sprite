@@ -1,6 +1,6 @@
 import { Component, OnInit, ElementRef, ViewChild, OnDestroy } from '@angular/core';
 import { PlinkoService } from './../plinko.service';
-import { TextStyle, CanvasDimension, AnimationTiming, GameStatus, GameText } from './config';
+import { TextStyle, CanvasDimension, AnimationTiming, GameStatus, GameText, HoleNumberList } from './config';
 import * as BABYLON from 'babylonjs';
 import 'babylonjs-loaders';
 
@@ -10,9 +10,11 @@ declare var PIXI: any;
   templateUrl: './plinko-state.component.html',
   styleUrls: ['./plinko-state.component.css']
 })
+
 export class PlinkoStateComponent implements OnInit, OnDestroy {
 
-  subscription: any;
+  subscriptionPlace: any;
+  subscriptionFinish: any;
   
   readyAssets: boolean;
   spritePramid: any;
@@ -43,12 +45,18 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
 
   constructor(public plinkoService: PlinkoService) {
     this.addGhostFontElement();
-    this.subscription = this.plinkoService.betPlaced.subscribe(status => this.betPlaced(status));
+    this.subscriptionPlace = this.plinkoService.betPlaced.subscribe(status => this.betPlaced(status));
+    this.subscriptionFinish = this.plinkoService.roundFinished.subscribe(result => this.roundFinished(result));
+
   }
   ngOnDestroy() {
-    if (this.subscription) {
-      this.subscription.unsubscribe();
-      this.subscription = null;
+    if (this.subscriptionPlace) {
+      this.subscriptionPlace.unsubscribe();
+      this.subscriptionPlace = null;
+    }
+        if (this.subscriptionPlace) {
+      this.subscriptionPlace.unsubscribe();
+      this.subscriptionPlace = null;
     }
     this.removeGhostFontElement();
     this.initializeTimer();
@@ -194,9 +202,30 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
         this.camera.radius -= 0.1;
       }
       this.camera.alpha += this.Valpha / 15;
+      this.camera.alpha %= Math.PI * 2;
       this.camera.beta += this.Vbeta / 25;
       if (this.camera.beta < 0) this.Vbeta = 1;
       if (this.camera.beta > Math.PI) this.Vbeta = -1;
+    } else if (this.animationStep === 2) {
+      const diffAlpha = HoleNumberList[this.status.dNumber].alpha - this.camera.alpha;
+      const diffBeta = HoleNumberList[this.status.dNumber].beta - this.camera.beta;
+      let reachedAlpha = false, reachedBeta = false;
+      if (Math.abs(diffAlpha) > 1 / 20) {
+        this.camera.alpha += diffAlpha/Math.abs(diffAlpha) / 20;
+      } else {
+        this.camera.alpha = HoleNumberList[this.status.dNumber].alpha;
+        reachedAlpha = true;
+      }
+      if (Math.abs(diffBeta) > 1 / 20) {
+        this.camera.beta += diffBeta/Math.abs(diffBeta) / 20;
+      } else {
+        this.camera.beta = HoleNumberList[this.status.dNumber].beta;
+        reachedBeta = false;
+      }
+      if (reachedAlpha && reachedBeta) {
+        this.animationStep ++;
+      }
+ 
     }
   }
  
@@ -256,6 +285,12 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
     this.playAnimation();
   }
 
+  roundFinished(result) {
+    console.log(result, 'uha')
+    this.animationStep = 2;
+
+  }
+
 
   addGhostFontElement() {
     this.ghostElement = document.createElement('p');
@@ -279,7 +314,7 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   }
 
   success() {
-    //this.plinkoService.setGameStatus(GameStatus.Success);
+    this.plinkoService.finishRound(50);
   }
 
   fail() {
