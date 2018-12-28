@@ -2,6 +2,7 @@ import { Component, OnInit, ElementRef, ViewChild, OnDestroy } from '@angular/co
 import { PlinkoService } from './../plinko.service';
 import { TextStyle, CanvasDimension, AnimationTiming, GameStatus, GameText } from './config';
 import * as BABYLON from 'babylonjs';
+import 'babylonjs-loaders';
 
 declare var PIXI: any;
 @Component({
@@ -29,6 +30,13 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   ghostElement: any;
   
   canvas: any;
+  engine: any;
+  scene: any;
+  camera: any;
+  pixiRenderer: any;
+  stage: any;
+
+  dice: any[];
 
   constructor(public plinkoService: PlinkoService) {
     this.addGhostFontElement();
@@ -56,7 +64,7 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
-
+    
     this.canvasWidth = CanvasDimension.width;
     this.canvasHeight = CanvasDimension.height;
 
@@ -64,30 +72,48 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
     this.canvas = document.getElementById("plinkoStatePanel");
 
     // babylon.js rendering
-    var engine = new BABYLON.Engine(this.canvas, true);
-    var scene = new BABYLON.Scene(engine);
-    var camera = new BABYLON.FreeCamera("camera1", new BABYLON.Vector3(0, 5, -10), scene);
-    camera.setTarget(BABYLON.Vector3.Zero());
-    camera.attachControl(this.canvas, true);
-    var light = new BABYLON.HemisphericLight("light1", new BABYLON.Vector3(0, 1, 0), scene);
-    light.intensity = 0.7;
-    var sphere = BABYLON.MeshBuilder.CreateSphere("sphere1", {diameter: 2}, scene);
-    sphere.material = new BABYLON.StandardMaterial("earth", scene);
-    sphere.rotation.x = Math.PI;
-    sphere.position.x = -1;
-    sphere.position.y = -1;
+    this.engine = new BABYLON.Engine(this.canvas, true);
+    this.scene = new BABYLON.Scene(this.engine);
+
+    this.camera = new BABYLON.ArcRotateCamera('mainCam', Math.PI / 2, Math.PI / 2, 3,  BABYLON.Vector3.Zero(), this.scene, true);
+    // this.camera.attachControl(this.canvas);
+    const light1 = new BABYLON.HemisphericLight("hemiLight1", new BABYLON.Vector3(-1, 1, 0), this.scene);
+    const light2 = new BABYLON.HemisphericLight("hemiLight2", new BABYLON.Vector3(1, -1, 0), this.scene);
+
+    const envTex = new BABYLON.Texture('assets/plinko/models/white-pixel.png', this.scene);
+    
+    this.dice = [];
+    BABYLON.SceneLoader.ImportMesh("", "assets/plinko/models/", "diceRed.gltf", this.scene,  (newMeshes)  =>{
+      // newMeshes[1].material['albedoTexture'] = new BABYLON.Texture("assets/plinko/models/red.png", this.scene, true, false)
+      this.dice[0] = newMeshes;
+      this.hideDice(0);
+    });
+    BABYLON.SceneLoader.ImportMesh("", "assets/plinko/models/", "diceGreen.gltf", this.scene,  (newMeshes)  =>{
+      this.dice[1] = newMeshes;
+      this.hideDice(1);
+    });
+    BABYLON.SceneLoader.ImportMesh("", "assets/plinko/models/", "diceBlue.gltf", this.scene,  (newMeshes)  =>{
+      this.dice[2] = newMeshes;
+      this.hideDice(2);
+    });
+    
+
+    
+ 
+
+
 
     // pixi.js rendering
-    var pixiRenderer = new PIXI.WebGLRenderer({
-      context: engine._gl,
-      view: engine.getRenderingCanvas(),
-      width: engine.getRenderWidth(),
-      height: engine.getRenderHeight(),
+    this.pixiRenderer = new PIXI.WebGLRenderer({
+      context: this.engine._gl,
+      view: this.engine.getRenderingCanvas(),
+      width: this.engine.getRenderWidth(),
+      height: this.engine.getRenderHeight(),
       clearBeforeRender: false,
       roundPixels: true,
       autoStart: false
     });
-    var stage = new PIXI.Container();
+    this.stage = new PIXI.Container();
 
 
 
@@ -139,9 +165,9 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
         this.spriteBackgroundBottom.loop = true;
         
 
-        stage.addChild(this.spriteBackgroundTop);
-        stage.addChild(this.spriteBackgroundBottom);
-        stage.addChild(this.spritePramid);
+        this.stage.addChild(this.spriteBackgroundTop);
+        this.stage.addChild(this.spriteBackgroundBottom);
+        this.stage.addChild(this.spritePramid);
         
         this.spriteBackgroundTop.play();
         this.spriteBackgroundBottom.play();
@@ -150,21 +176,34 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
       });
     
     
-    engine.runRenderLoop(function() {   
-      pixiRenderer.reset();
-      pixiRenderer.render(stage);
+    this.engine.runRenderLoop(() => {   
+      this.pixiRenderer.reset();
+      this.pixiRenderer.render(this.stage);
       
-      scene.autoClear = false;
-      // sphere.rotation.y += 0.01;
-      scene.render();    	
-      engine.wipeCaches(true);
+      this.scene.autoClear = false;
+      this.scene.render();    	
+      this.engine.wipeCaches(true);
     
-      
+
       
     });
   }
  
+  hideDice(diceColor) {
+    for (let i = 0; i < 3; i ++) {
 
+      if (i === diceColor || diceColor < 0 || this.dice[i]) {
+        this.dice[i][1].visibility = 0;
+        this.dice[i][2].visibility = 0;
+      }
+    }
+  }
+
+  showDice(diceColor) {
+    this.hideDice(-1);
+    this.dice[diceColor][1].visibility = 1;
+    this.dice[diceColor][2].visibility = 1;
+  }
 
 
   playAnimation() {
@@ -185,7 +224,7 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
   }
 
   betPlaced(status) {
-    console.log('lsdfkjsd')
+    console.log(status)
     this.spritePramid.alpha = 1.0;
     this.playAnimation();
   }

@@ -2,7 +2,7 @@ import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { PlinkoStateComponent } from './plinko-state.component';
 
-describe('SlotStateComponent', () => {
+describe('PlinkoStateComponent', () => {
   let component: PlinkoStateComponent;
   let fixture: ComponentFixture<PlinkoStateComponent>;
 

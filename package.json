@@ -22,6 +22,9 @@
     "@angular/router": "^6.0.3",
     "@createjs/easeljs": "^2.0.0-beta.3",
     "@types/pixi.js": "^4.8.2",
+    "babylonjs": "^3.3.0",
+    "babylonjs-gui": "^3.3.0",
+    "babylonjs-loaders": "^3.3.0",
     "core-js": "^2.5.4",
     "createjs-module": "^0.8.3",
     "easel-gl": "^1.0.6",
@@ -29,10 +32,7 @@
     "k8w-pixi-tween": "^0.7.6",
     "latest-createjs": "^1.0.24",
     "pixi.js": "^4.8.2",
-    "zone.js": "^0.8.26",
-    "babylonjs": "^3.3.0",
-    "babylonjs-gui": "^3.3.0",
-    "babylonjs-loaders": "^3.3.0"
+    "zone.js": "^0.8.26"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~0.6.8",
