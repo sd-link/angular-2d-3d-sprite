@@ -8,7 +8,7 @@ export enum CanvasDimension {
 
 export const HoleNumberList = [
   { 
-    alpha: Math.PI,
+    alpha: Math.PI / 2,
     beta: 0
   },
   { 

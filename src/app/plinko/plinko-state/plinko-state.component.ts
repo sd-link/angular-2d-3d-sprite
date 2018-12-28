@@ -3,6 +3,7 @@ import { PlinkoService } from './../plinko.service';
 import { TextStyle, CanvasDimension, AnimationTiming, GameStatus, GameText, HoleNumberList } from './config';
 import * as BABYLON from 'babylonjs';
 import 'babylonjs-loaders';
+import { ThrowStmt } from '@angular/compiler';
 
 declare var PIXI: any;
 @Component({
@@ -181,6 +182,8 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
       });
     
     
+    this.timer = [];
+    
     this.engine.runRenderLoop(() => {   
       this.updateAll();
       this.pixiRenderer.reset();
@@ -189,9 +192,6 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
       this.scene.autoClear = false;
       this.scene.render();    	
       this.engine.wipeCaches(true);
-      
-
-      
     });
   }
 
@@ -220,13 +220,25 @@ export class PlinkoStateComponent implements OnInit, OnDestroy {
         this.camera.beta += diffBeta/Math.abs(diffBeta) / 20;
       } else {
         this.camera.beta = HoleNumberList[this.status.dNumber].beta;
-        reachedBeta = false;
+        reachedBeta = true;
       }
       if (reachedAlpha && reachedBeta) {
-        this.animationStep ++;
+        this.animationStep = 3;
       }
  
-    }
+    } else if (this.animationStep === 3) {
+      this.timer[0] = setTimeout (()=> {
+        this.animationStep = 4;
+        clearTimeout(this.timer[0]);
+      }, 500);
+    } else if (this.animationStep === 4) {
+      if (this.camera.radius < CanvasDimension.cameraRadiusMax) {
+        this.camera.radius += 0.1;
+      } else {
+        this.hideDice(-1);
+        
+      }
+    } 
   }
  
   hideDice(diceColor) {
